@@ -1,13 +1,24 @@
+import os
+import pickle
 import streamlit as st
+import numpy as np
+import faiss
 from openai import OpenAI
 
 # Show title and description.
 st.title("💬 Chatbot")
 st.write(
-    "This is a simple chatbot that uses OpenAI's GPT-3.5 model to generate responses. "
-    "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
-    "You can also learn how to build this app step by step by [following our tutorial](https://docs.streamlit.io/develop/tutorials/llms/build-conversational-apps)."
+    "This app demonstrates a simple legal assistant powered by OpenAI."
+    " It does not provide official legal advice and should be used for informational purposes only."
 )
+
+# Persona configuration
+default_persona = (
+    "You are a senior legal counsel specializing in South African law. "
+    "Provide clear, thorough answers with references when available. "
+    "Always include the disclaimer that you are an AI system and not a substitute for professional legal advice."
+)
+persona_text = st.text_area("Persona", value=default_persona)
 
 # Ask user for their OpenAI API key via `st.text_input`.
 # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
@@ -20,10 +31,20 @@ else:
     # Create an OpenAI client.
     client = OpenAI(api_key=openai_api_key)
 
+    # Load retrieval index if available
+    index = None
+    documents = []
+    if os.path.exists("legal_index.faiss") and os.path.exists("legal_docs.pkl"):
+        index = faiss.read_index("legal_index.faiss")
+        with open("legal_docs.pkl", "rb") as f:
+            documents = pickle.load(f)
+
     # Create a session state variable to store the chat messages. This ensures that the
     # messages persist across reruns.
     if "messages" not in st.session_state:
-        st.session_state.messages = []
+        st.session_state.messages = [
+            {"role": "system", "content": persona_text}
+        ]
 
     # Display the existing chat messages via `st.chat_message`.
     for message in st.session_state.messages:
@@ -38,6 +59,21 @@ else:
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
+
+        # Retrieve relevant legal documents
+        if index is not None:
+            emb = client.embeddings.create(model="text-embedding-ada-002", input=prompt)
+            query_vec = np.array(emb.data[0].embedding, dtype="float32").reshape(1, -1)
+            dists, idxs = index.search(query_vec, 3)
+            context = []
+            for i in idxs[0]:
+                if i != -1:
+                    context.append(documents[i]["text"])
+            if context:
+                st.session_state.messages.append({
+                    "role": "system",
+                    "content": "Relevant legal context:\n" + "\n\n".join(context)
+                })
 
         # Generate a response using the OpenAI API.
         stream = client.chat.completions.create(

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIBSI AI - Legal Assistant</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="chat-container">
+        <div id="controls">
+            <select id="role">
+                <option value="Guest">Guest</option>
+                <option value="Paralegal">Paralegal</option>
+                <option value="Advocate">Advocate</option>
+            </select>
+            <select id="legal-form">
+                <option value="">Select Legal Form</option>
+                <option value="Affidavit">Affidavit</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Violence form">Violence form</option>
+            </select>
+            <button id="export-btn">Export Chat</button>
+        </div>
+        <div id="chat-window"></div>
+        <div id="input-area">
+            <textarea id="user-input" placeholder="Ask a legal question..."></textarea>
+            <div class="buttons">
+                <button id="send-btn">Send</button>
+                <button id="speak-btn">🎤 Speak</button>
+            </div>
+        </div>
+    </div>
+    <p id="disclaimer">LIBSI AI provides information on South African law and does not constitute professional legal advice.</p>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
