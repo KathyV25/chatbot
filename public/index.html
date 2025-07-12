@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LexiAI – Legal Assistant</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #eef1f5;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      width: 90%;
+      max-width: 800px;
+      margin: 40px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #003366;
+    }
+    #chat-box {
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      background-color: #f9f9f9;
+      margin-bottom: 10px;
+      white-space: pre-line;
+    }
+    textarea {
+      width: 100%;
+      height: 60px;
+      padding: 8px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+    }
+    button, select {
+      padding: 10px 15px;
+      margin-right: 5px;
+      margin-bottom: 10px;
+      border: none;
+      border-radius: 4px;
+      background-color: #0056b3;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover, select:hover {
+      background-color: #003d80;
+    }
+    select {
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>LexiAI – South African Legal Assistant</h1>
+    <select id="role">
+      <option value="guest">Guest</option>
+      <option value="paralegal">Paralegal</option>
+      <option value="advocate">Advocate</option>
+    </select>
+    <div id="chat-box"></div>
+    <textarea id="user-input" placeholder="Ask your legal question..."></textarea>
+    <button onclick="sendMessage()">Send</button>
+    <button onclick="startVoice()">🎤 Speak</button>
+    <button onclick="exportChat()">📝 Export Chat</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+  <script>
+    async function sendMessage() {
+      const input = document.getElementById("user-input").value.trim();
+      if (!input) return;
+      const role = document.getElementById("role").value;
+      const chatBox = document.getElementById("chat-box");
+      chatBox.innerHTML += `<p><strong>You (${role}):</strong> ${input}</p>`;
+      try {
+        const res = await fetch("http://localhost:3000/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: `[${role}] ${input}` }),
+        });
+        const data = await res.json();
+        chatBox.innerHTML += `<p><strong>LexiAI:</strong> ${data.response}</p>`;
+        document.getElementById("user-input").value = "";
+        chatBox.scrollTop = chatBox.scrollHeight;
+        speak(data.response);
+      } catch (error) {
+        chatBox.innerHTML += `<p><strong>LexiAI:</strong> Error contacting server.</p>`;
+      }
+    }
+
+    function startVoice() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "en-ZA";
+      recognition.start();
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById("user-input").value = transcript;
+      };
+      recognition.onerror = () => {
+        alert("Voice input failed.");
+      };
+    }
+
+    function speak(text) {
+      const synth = window.speechSynthesis;
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "en-ZA";
+      synth.speak(utter);
+    }
+
+    function exportChat() {
+      const chat = document.getElementById("chat-box");
+      html2pdf().from(chat).save("LexiAI_Chat.pdf");
+    }
+  </script>
+</body>
+</html>
