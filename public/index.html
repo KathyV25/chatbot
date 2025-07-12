@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LexiAI – South African Legal Assistant</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>LexiAI – South African Legal Assistant</h1>
+    <select id="role">
+      <option value="guest">Guest</option>
+      <option value="paralegal">Paralegal</option>
+      <option value="advocate">Advocate</option>
+    </select>
+    <div id="chat-box"></div>
+    <textarea id="user-input" placeholder="Ask your legal question..."></textarea>
+    <button onclick="sendMessage()">Send</button>
+    <button onclick="startVoice()">🎤 Speak</button>
+    <button onclick="exportChat()">📝 Export Chat</button>
+  </div>
+  <p id="disclaimer">LIBSI AI provides information on South African law and does not constitute professional legal advice.</p>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
